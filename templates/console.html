@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Console · {{ vps.hostname or vps.container_name }} · {{ panel_name }}{% endblock %}
+{% block header_title %}Server console{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/xterm/xterm.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/console.css') }}">
+{% endblock %}
+{% block content %}
+<div class="console-workspace" id="console-workspace" data-console-id="{{ vps.id }}" data-ssh-available="{{ 'true' if ssh_available else 'false' }}">
+  <header class="console-heading"><div><a href="{{ url_for('vps_detail', vps_id=vps.id) }}" class="text-link"><i class="fas fa-arrow-left"></i> Back to server</a><h1>{{ vps.hostname or vps.container_name }}<span class="heading-dot"> / console</span></h1><p>A direct SSH session, in your browser.</p></div><button class="btn btn-outline" data-access-open><i class="fas fa-link"></i> Other access methods</button></header>
+  <div class="terminal-shell">
+    <div class="terminal-toolbar"><div class="terminal-label"><i class="fas fa-terminal"></i><span>SSH terminal</span><span class="console-state" id="console-state" data-state="idle">Not connected</span></div><div class="terminal-controls"><button class="icon-button" id="console-clear" aria-label="Clear terminal" title="Clear terminal"><i class="fas fa-eraser"></i></button><button class="icon-button" id="console-fullscreen" aria-label="Toggle terminal fullscreen" title="Fullscreen"><i class="fas fa-expand"></i></button><button class="btn btn-outline btn-sm" id="console-disconnect" disabled>Disconnect</button></div></div>
+    <div class="terminal-stage">
+      <div id="terminal" aria-label="Interactive SSH terminal"></div>
+      <div class="console-login" id="console-login"><form id="console-form" class="console-login-card" autocomplete="off"><span class="console-lock"><i class="fas fa-terminal"></i></span><p class="eyebrow">YOUR SERVER. YOUR SESSION.</p><h2>Let’s get you connected.</h2><p class="console-description">Enter your current guest credentials.<br>Nothing is filled in or submitted automatically.</p><div class="console-endpoint" id="console-endpoint"><i class="fas fa-circle-notch fa-spin"></i> Preparing SSH endpoint…</div><label for="console-user">VPS username</label><input id="console-user" type="text" placeholder="Enter guest username" autocomplete="off" required maxlength="128" spellcheck="false" autocapitalize="none"><label for="console-auth">Authentication</label><select id="console-auth" class="form-control"><option value="password">Password</option><option value="key">SSH private key</option></select><div id="console-key-fields" hidden><label for="console-private-key">Private key (this session only)</label><textarea id="console-private-key" class="form-control" rows="3" maxlength="32768" spellcheck="false" autocomplete="off" placeholder="Paste your OpenSSH private key"></textarea></div><label for="console-password" id="console-password-label">VPS password</label><div class="console-password-field"><input id="console-password" type="password" placeholder="Enter current password" autocomplete="off" required maxlength="4096"><button type="button" id="console-show-password" aria-label="Show password" aria-pressed="false"><i class="fas fa-eye"></i></button></div><p class="access-error" id="console-error" role="alert" hidden></p><button class="btn btn-primary" id="console-connect" type="submit" disabled><span>Connect to server</span><i class="fas fa-arrow-right"></i></button><button type="button" class="console-retry" id="console-retry">Refresh connection details</button><small>Credentials are used in memory for this session and are not saved. Use HTTPS; private keys pass through the panel to establish SSH.</small></form></div>
+    </div>
+    <footer class="terminal-footer"><span id="console-message" role="status">Preparing connection</span><div><span id="console-dimensions">—</span><span>Ctrl+C works in the terminal</span></div></footer>
+  </div>
+</div>
+{% include 'components/access.html' %}
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='vendor/socket.io/socket.io.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/xterm/xterm.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/xterm-fit/xterm-addon-fit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/console.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,25 @@
+<dialog class="workspace-dialog" id="access-dialog" aria-labelledby="access-title" data-access-vps="{{ vps.id }}">
+  <header class="dialog-header"><div><span class="eyebrow">SERVER ACCESS</span><h2 id="access-title">How would you like to connect?</h2><p>{{ vps.hostname or vps.container_name }} · Choose the connection that fits your workflow.</p></div><button class="icon-button" data-access-close aria-label="Close access dialog"><i class="fas fa-xmark"></i></button></header>
+  <div class="dialog-body">
+    <div data-access-setup>
+      <fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">Access method</legend><div class="access-choices">
+        <label class="access-choice"><input type="radio" name="access-method" value="shared_ipv4" checked><i class="fas fa-network-wired"></i><strong>Shared IPv4</strong><small>Your own SSH client.<br>Reusable node port mapping.</small></label>
+        <label class="access-choice"><input type="radio" name="access-method" value="sshx"><i class="fas fa-terminal"></i><strong>SSHX</strong><small>Collaborative terminal.<br>Open in your browser.</small></label>
+        <label class="access-choice"><input type="radio" name="access-method" value="tmate"><i class="fas fa-link"></i><strong>tmate</strong><small>Temporary relay session.<br>SSH client or browser.</small></label>
+      </div></fieldset>
+      <p class="muted text-small" data-method-description>Creates or reuses a TCP forward to guest port 22. Use your current VPS username and password.</p>
+      <label class="access-consent" data-install-option hidden><input type="checkbox" data-install-tools><span>Install missing tools inside this VPS. SSHX uses its official installer; tmate uses the guest package manager.</span></label>
+      <p class="access-note" data-relay-note hidden>Relay links grant shell access to this VPS through an external service. Keep them private. Sessions expire after one hour or when you end them here.</p>
+    </div>
+    <div class="access-progress" data-access-progress hidden role="status"><i class="fas fa-circle-notch"></i><span data-access-message>Preparing access…</span></div>
+    <div class="access-error" data-access-error hidden role="alert"></div>
+    <div class="access-result" data-access-result hidden>
+      <h3>Ready when you are.</h3><p class="muted text-small" data-access-result-note></p>
+      <div data-command-result hidden><label for="access-command">SSH command · change root if you use another guest account</label><div class="copy-field"><input id="access-command" readonly spellcheck="false"><button class="icon-button" data-copy-command aria-label="Copy SSH command"><i class="fas fa-copy"></i></button></div></div>
+      <div data-link-result hidden><label for="access-link">Private session link</label><div class="copy-field"><input id="access-link" readonly spellcheck="false"><button class="icon-button" data-copy-link aria-label="Copy private session link"><i class="fas fa-copy"></i></button></div></div>
+      <div class="button-row"><a class="btn btn-primary" data-open-session target="_blank" rel="noopener noreferrer" hidden>Open session <i class="fas fa-arrow-up-right-from-square"></i></a><a class="btn btn-outline" href="{{ url_for('vps_console', vps_id=vps.id) }}">Use built-in console</a></div>
+    </div>
+    <div class="dialog-actions"><button class="btn btn-outline" data-access-end hidden>End session</button><button class="btn btn-primary" data-access-generate>Prepare access <i class="fas fa-arrow-right"></i></button></div>
+  </div>
+</dialog>
+<script src="{{ url_for('static', filename='js/access.js') }}" defer></script>

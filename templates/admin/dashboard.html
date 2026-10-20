@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% from 'components/workspace.html' import metric with context %}
+{% block title %}Administration · {{ panel_name }}{% endblock %}
+{% block header_title %}Administration{% endblock %}
+{% block content %}<div class="workspace admin-workspace">
+<header class="workspace-heading" data-reveal><div><p class="eyebrow">CONTROL ROOM / OVERVIEW</p><h1>Admin dashboard<span class="heading-dot">.</span></h1><p>Manage your fleet, users, nodes and panel configuration.</p></div><a class="btn btn-primary" href="{{ url_for('admin_vps_create') }}"><i class="fas fa-plus"></i> Create server</a></header>
+<div class="metric-grid">{{ metric('User accounts', total_users, icon='users') }}{{ metric('Virtual servers', total_vps, icon='server', note=running_vps|string + ' running') }}{{ metric('Online nodes', online_nodes|string + ' / ' + total_nodes|string, icon='network-wired') }}{{ metric('Allocated port usage', used_ports|string + ' / ' + total_ports|string, icon='plug') }}</div>
+<section class="workspace-panel admin-quick-actions" data-reveal><div class="section-heading"><h2>Operations</h2><i class="fas fa-sliders muted"></i></div><div class="operation-grid">{% for endpoint,icon,title,description in [('admin_users','users','Users','Accounts & permissions'),('admin_nodes','network-wired','Nodes','Hosts & connectivity'),('admin_vps','server','Servers','Lifecycle & allocations'),('admin_settings','gear','Settings','Panel configuration')] %}<a href="{{ url_for(endpoint) }}" class="operation-tile"><i class="fas fa-{{ icon }}"></i><strong>{{ title }}</strong><small>{{ description }}</small></a>{% endfor %}</div></section>
+{% include 'components/host_telemetry.html' %}
+<section class="workspace-section"><div class="section-heading"><div><p class="eyebrow">FLEET</p><h2>Your nodes</h2></div><button class="btn btn-outline btn-sm" onclick="refreshNodes()"><i class="fas fa-rotate"></i> Refresh</button></div><div class="server-grid">{% for node in node_status %}<article class="workspace-panel" data-reveal><div class="section-heading"><span class="server-glyph"><i class="fas fa-network-wired"></i></span><span class="state-pill" data-state="{{ 'running' if node.online else 'stopped' }}"><span></span>{{ 'Online' if node.online else 'Unreachable' }}</span></div><h3>{{ node.name }}</h3><p class="muted">{{ node.location or 'Location not set' }}</p><div class="utility-row"><span>Server allocation</span><strong>{{ node.vps_count }} / {{ node.total_vps }}</strong></div><a class="text-link" href="{{ url_for('admin_node_edit', node_id=node.id) }}">Manage node <i class="fas fa-arrow-right"></i></a></article>{% else %}<div class="workspace-empty"><h3>Add your first node.</h3><p>Connect a host to start deploying servers.</p><a class="btn btn-primary" href="{{ url_for('admin_nodes') }}">Manage nodes</a></div>{% endfor %}</div></section>
+<section class="workspace-panel" data-reveal><div class="section-heading"><h2>Recent activity</h2><a class="text-link" href="{{ url_for('admin_logs') }}">View logs <i class="fas fa-arrow-right"></i></a></div>{% if recent_activity %}<div class="table-responsive"><table class="table"><thead><tr><th>Actor</th><th>Action</th><th>Resource</th><th>When</th></tr></thead><tbody>{% for activity in recent_activity[:10] %}<tr><td>{{ activity.username or 'System' }}</td><td><span class="badge badge-info">{{ activity.action }}</span></td><td>{{ activity.resource_type or '—' }} {{ activity.resource_id or '' }}</td><td class="muted">{{ activity.created_at|relative_time }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="quiet-state"><i class="fas fa-clock"></i><p>Activity will appear as your workspace changes.</p></div>{% endif %}</section>
+<details class="workspace-panel danger-zone"><summary>Advanced operations <span>Resource enforcement & emergency controls</span></summary><p>Resource checks can suspend servers. Emergency stop interrupts all running VPSes.</p><div class="button-row"><button class="btn btn-outline" onclick="runResourceCheck()">Run resource check</button><button class="btn btn-danger" onclick="emergencyStopAll()">Emergency stop all</button></div></details>
+</div>{% endblock %}
+{% block extra_js %}
+<script>
+    // Run resource check
+    async function runResourceCheck() {
+        if (!confirm('Run resource check on all VPS? This may suspend VPS with high usage.')) {
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const response = await fetch('/admin/resource-check', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(`Resource check complete. ${result.suspended} VPS suspended.`, 'success');
+            } else {
+                showToast(result.error || 'Resource check failed', 'danger');
+            }
+        } catch (error) {
+            console.error('Resource check error:', error);
+            showToast('Network error: ' + error.message, 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Emergency stop all VPS
+    async function emergencyStopAll() {
+        if (!confirm('WARNING: This will stop ALL running VPS. Are you absolutely sure?')) {
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const response = await fetch('/admin/emergency-stop-all', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(`Emergency stop complete. ${result.stopped} VPS stopped.`, 'warning');
+            } else {
+                showToast(result.error || 'Emergency stop failed', 'danger');
+            }
+        } catch (error) {
+            console.error('Emergency stop error:', error);
+            showToast('Network error: ' + error.message, 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Refresh nodes
+    function refreshNodes() {
+        showLoading();
+        window.location.reload();
+    }
+</script>
+{% endblock %}

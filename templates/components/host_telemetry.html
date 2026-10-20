@@ -1,0 +1,6 @@
+<section class="workspace-panel" data-host-telemetry>
+ <div class="section-heading"><div><p class="eyebrow">OBSERVABILITY</p><h2>Panel host telemetry</h2></div><a class="text-link" href="{{ url_for('admin_system_info') }}">System details <i class="fas fa-arrow-right" aria-hidden="true"></i></a></div>
+ <div class="telemetry-grid">{% for key,label in [('cpu','CPU usage'),('memory','Memory usage'),('disk','Disk usage'),('network','Network throughput')] %}
+ <div class="telemetry-cell" data-host-cell="{{ key }}"><span>{{ label }}</span><strong data-host-value>Collecting…</strong><svg class="sparkline" viewBox="0 0 240 42" preserveAspectRatio="none" aria-hidden="true"><polyline points=""/></svg>{% if key != 'network' %}<progress max="100" value="0" aria-label="{{ label }}" hidden></progress>{% else %}<small>Receive + transmit / second</small>{% endif %}</div>{% endfor %}</div>
+ <p class="telemetry-note" data-host-updated role="status">Waiting for a live host sample. Charts build from observed values.</p>
+</section>

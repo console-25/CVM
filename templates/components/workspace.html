@@ -1,0 +1,21 @@
+{% macro metric(label, value, suffix='', icon='server', note='', key='') -%}
+<div class="workspace-metric" data-reveal><div class="metric-top"><span>{{ label }}</span><i class="fas fa-{{ icon }}" aria-hidden="true"></i></div><div class="metric-value" {% if key %}data-fleet-count="{{ key }}"{% endif %}>{{ value }}<small>{{ suffix }}</small></div>{% if note %}<p>{{ note }}</p>{% endif %}</div>
+{%- endmacro %}
+{% macro server_card(vps) -%}
+<article class="server-card" data-server-id="{{ vps.id }}" data-server-name="{{ (vps.hostname or vps.container_name)|lower }}" data-server-created="{{ vps.created_at or '' }}" data-server-status="{{ vps.live_status or vps.status or 'unknown' }}" data-reveal>
+  <div class="server-card-top"><span class="server-glyph"><i class="fas fa-server" aria-hidden="true"></i></span><span class="state-pill" data-state="{{ vps.live_status or vps.status or 'unknown' }}"><span></span><b data-server-state>{{ vps.live_status or vps.status or 'unknown' }}</b></span></div>
+  <a class="server-title" href="{{ url_for('vps_detail', vps_id=vps.id) }}">{{ vps.hostname or vps.container_name }} <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+  <p class="server-meta">{{ vps.os_version or 'Linux' }} <span>·</span> #{{ vps.id }}</p>
+  <dl class="server-specs"><div><dt>vCPU</dt><dd>{{ vps.cpu }}</dd></div><div><dt>Memory</dt><dd>{{ vps.ram }}</dd></div><div><dt>Storage</dt><dd>{{ vps.storage }}</dd></div></dl>
+  <div class="server-addresses"><div><i class="fas fa-network-wired" aria-hidden="true"></i><span data-server-ipv4>{{ vps.ip_address or 'IPv4 awaiting live state' }}</span></div><div><span data-server-ipv6></span></div></div><p class="server-created">Created {{ (vps.created_at or 'Unknown')[:10] }}</p>
+  <div class="server-telemetry"><span>CPU <b data-server-cpu>—</b></span><span>Memory <b data-server-ram>—</b></span></div>
+  <div class="server-card-footer"><a href="{{ url_for('vps_detail', vps_id=vps.id) }}">Manage server <i class="fas fa-arrow-right" aria-hidden="true"></i></a><a class="icon-button" href="{{ url_for('vps_console', vps_id=vps.id) }}" aria-label="Open console for {{ vps.hostname or vps.container_name }}"><i class="fas fa-terminal" aria-hidden="true"></i></a></div>
+</article>
+{%- endmacro %}
+{% macro server_browser(vps_list, compact=false) -%}
+<div class="server-toolbar"><label class="workspace-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" placeholder="Find a server…" aria-label="Find a server" data-server-search></label><select class="workspace-select" aria-label="Filter servers by status" data-server-filter><option value="all">All statuses</option><option value="running">Running</option><option value="stopped">Stopped</option><option value="suspended">Suspended</option><option value="installing">Installing</option><option value="failed">Failed</option><option value="missing">Missing</option><option value="unknown">Unknown</option></select><select class="workspace-select" aria-label="Sort servers" data-server-sort><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select><button type="button" class="btn btn-outline" data-server-refresh><i class="fas fa-rotate" aria-hidden="true"></i> Refresh</button><span class="muted text-small" data-refresh-label>Checking metrics…</span></div>
+<div class="server-grid">{% for vps in vps_list %}{{ server_card(vps) }}{% endfor %}</div>
+<div class="inventory-pagination"><span data-page-label></span><div><button class="btn btn-outline" data-page-prev type="button" aria-label="Previous server page">Previous</button><button class="btn btn-outline" data-page-next type="button" aria-label="Next server page">Next</button></div></div>
+<p class="workspace-empty" data-search-empty hidden>No servers match your search. Try another name or status.</p>
+{% if not vps_list %}<div class="workspace-empty"><span class="server-glyph"><i class="fas fa-server"></i></span><h3>Your cloud starts here.</h3><p>Your assigned virtual servers will appear here. Contact your administrator to get started.</p>{% if current_user.is_admin %}<a class="btn btn-primary" href="{{ url_for('admin_vps_create') }}">Create your first VPS <i class="fas fa-plus"></i></a>{% endif %}</div>{% endif %}
+{%- endmacro %}

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% from 'components/workspace.html' import metric, server_browser with context %}
+{% block title %}Servers · {{ panel_name }}{% endblock %}
+{% block header_title %}Compute{% endblock %}
+{% block content %}<div class="workspace" data-server-workspace><header class="workspace-heading" data-reveal><div><p class="eyebrow">WORKSPACE / COMPUTE</p><h1>Your servers<span class="heading-dot">.</span></h1><p>A clear view of every machine in your workspace.</p></div>{% if current_user.is_admin %}<a class="btn btn-primary" href="{{ url_for('admin_vps_create') }}"><i class="fas fa-plus"></i> Create server</a>{% endif %}</header><div class="metric-grid three">{{ metric('Total servers', vps_list|length) }}{{ metric('Running', vps_list|selectattr('live_status', 'equalto', 'running')|list|length, icon='circle-play') }}{{ metric('Suspended', vps_list|selectattr('live_status', 'equalto', 'suspended')|list|length, icon='pause') }}</div>{{ server_browser(vps_list) }}</div>{% endblock %}
